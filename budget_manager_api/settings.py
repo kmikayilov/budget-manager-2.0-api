@@ -39,8 +39,18 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'budget_manager.apps.BudgetManagerConfig',
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
+    'knox'
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication'
+    ]
+}
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

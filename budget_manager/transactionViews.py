@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 # from django.models.db import Q
-
+from django.db.models import Q
 from . import serializers, models
 
 # Create your views here.
@@ -115,80 +115,43 @@ class FilterTransactions(generics.CreateAPIView):
     queryset = models.Transaction.objects.all()
     serializer_class = serializers.TransactionSerializer
 
+    def order_by(self, order, field):
+        sign = '-' if order == 'desc' else '' 
+        if field == 'id' or field == 'transactionAmount' or field == 'transactionDate' or field == 'payment_id' or field == 'category_id':
+            val = sign + field
+        else:
+            val = sign + 'category__accounting'
+        
+        return val
+
     def post(self, request, format=None):
         data = {}
-        print(request.data)
+
         query = self.get_queryset()
-        data['transactionsCount'] = self.get_queryset().count()
+        data['transactionCount'] = self.get_queryset().count()
+        
+        req = request.data
+        filterObject = req['filters']
+      
+        and_condition = Q()
+        for filter in filterObject:
+            if filter == 'id' or filter == 'transactionAmount' or filter == 'transactionDate':
+                and_condition.add(Q(**{"{}__icontains".format(filter):filterObject[filter]}), Q.AND)
 
-        for filter in request.data['filters']:
-            lookup = "%s__contains" % filter
-            value = request.data['filters'][filter]
-            print(lookup, value)
+            if filter == 'category_id' or filter == 'payment_id':
+                and_condition.add(Q(**{filter: filterObject[filter]}), Q.AND)
+            
+            if filter == "accounting_id":
+                and_condition.add(Q(**{"category__accounting": filterObject[filter]}), Q.AND)
 
-        filters = {
-            "%s__contains": value
-            for key, value in request.data['filters']
-        }
-
-        print(filters)
-
-        query = query.filter(**filters)
-        # query = query.filter(lookup=value)
-        #     if filter == 'id':
-        #         query = query.filter(
-        #             id__contains=request.data['filters']['id'])
-        #         continue
-        #     if filter == 'transactionDate':
-        #         query = query.filter(
-        #             transactionDate__contains=request.data['filters']['transactionDate'])
-        #         continue
-        #     if filter == 'transactionAmount':
-        #         query = query.filter(
-        #             transactionAmount__contains=request.data['filters']['transactionAmount'])
-        #         continue
-        #     if filter == 'category_name':
-        #         query = query.filter(
-        #             category_id=request.data['filters']['category_name'])
-        #         continue
-        #     if filter == 'payment_method':
-        #         query = query.filter(
-        #             payment_id=request.data['filters']['payment_method'])
-        #         continue
-        #     if filter == 'accounting_type':
-        #         query = query.filter(
-        #             accounting_id=request.data['filters']['accounting_type'])
-        #         continue
-
-        # if filter == 'id':
-        #     query = query.order_by(
-        #         id__contains=request.data['filters']['id'])
-        # elif filter == 'transactionDate':
-        #     query = query.filter(
-        #         transactionDate__contains=request.data['filters']['transactionDate'])
-        # elif filter == 'transactionAmount':
-        #     query = query.filter(
-        #         transactionAmount__contains=request.data['filters']['transactionAmount'])
-        # elif filter == 'category_name':
-        #     query = query.filter(
-        #         category_id=request.data['filters']['category_name'])
-        # elif filter == 'payment_method':
-        #     query = query.filter(
-        #         payment_id=request.data['filters']['payment_method'])
-        # else:
-        #     query = query.filter(
-        #         accounting_id=request.data['filters']['accounting_type'])
-
-        # if request.data['sortOrder'] == 'desc':
-        #     order = '-' + self.normalize(request.data['sortField'])
-        # else:
-        #     order = self.normalize(request.data['sortField'])
-
-        # query = query.order_by(order)
-
+        query = self.get_queryset().filter(and_condition)
+        
+        if 'sortField' in req:
+            order = self.order_by(req['sortOrder'], req['sortField'])
+            query = query.order_by(order)
+        
+        
         objectsList = serializers.TransactionSerializer(query, many=True).data
-        data["transactions"] = objectsList or []
+        data["transactions"] = objectsList[req['offset']:req['offset']+req['limit']]
 
         return Response(data, status=status.HTTP_200_OK)
-        return Response()
-        # return Response(f"Fuck off!")

@@ -1,6 +1,8 @@
 from django.urls import path
 
-from . import transactionViews, listsViews
+from . import transactionViews, listsViews, authViews
+
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
 
@@ -29,11 +31,14 @@ urlpatterns = [
 
 
 
-    # authAPI
+     # authAPI
 
-    # auth/register
+     # auth/register
+     path('auth/register', authViews.RegistrationAPIView.as_view(), name="register-user"),
+     
+     # auth/login
+     path('auth/login', authViews.LoginAPIView.as_view(), name="login-user"),
 
-    # auth/login
-
-    # auth/auth
+     # auth/auth
+     path('auth/user', TokenRefreshView.as_view(), name="auth-user"),
 ]
