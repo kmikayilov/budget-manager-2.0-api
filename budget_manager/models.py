@@ -28,8 +28,8 @@ class PaymentMethod(models.Model):
 class Transaction(models.Model):
     transactionAmount = models.CharField(max_length=50, null=True)
     transactionDate = models.DateField(null=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
-    payment = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE, null=True)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, related_name="transactions")
+    payment = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE, null=True, related_name="transactions")
 
     def __str__(self):
         return f"{self.transactionAmount} ({self.transactionDate}, {self.category.category}, {self.payment.method})"

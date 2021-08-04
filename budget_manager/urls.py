@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import transactionViews, listsViews, authViews
+from . import transactionViews, listsViews, authViews, analysisViews
 
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -41,4 +41,12 @@ urlpatterns = [
 
      # auth/auth
      path('auth/user', TokenRefreshView.as_view(), name="auth-user"),
+
+     # analysis
+
+     # donut chart categories
+     path('analysis/categories-donut-chart', analysisViews.CategoriesDonutChart.as_view(), name="categories-donut-chart"),
+     
+     # income expense bar chart
+     path('analysis/income-expense-bar-chart', analysisViews.IncomeExpenseBarChart.as_view(), name="income-expense-bar-chart"),
 ]
