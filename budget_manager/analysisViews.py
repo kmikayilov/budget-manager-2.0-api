@@ -1,16 +1,6 @@
-from rest_framework import generics, status
-from django.contrib.auth.models import User
-from . import serializers
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView
-from knox.models import AuthToken
-from django.contrib.auth import (
-    authenticate, get_user_model, login as auth_login, logout as auth_logout
-)
 from django.db.models import Q, Sum
 import datetime
 
@@ -23,11 +13,11 @@ class IncomeExpenseBarChart(APIView):
     def get(self, request):
         data = [
             {
-                "name": 'Income',
+                "seriesname": 'Income',
                 "data": [],
             },
             {
-                "name": "Expense",
+                "seriesname": "Expense",
                 "data": [],
             }
         ]
@@ -43,7 +33,11 @@ class IncomeExpenseBarChart(APIView):
                 category__accounting=2)).aggregate(Sum('transactionAmount')).get('transactionAmount__sum') or 0
 
             data[0]['data'].append(sumIncome)
-            data[1]['data'].append(sumExpense)
+            data[1]['data'].append({
+                    "value":sumExpense
+                }
+            )
+
 
         return Response(data, status=status.HTTP_200_OK)
 
@@ -54,17 +48,19 @@ class IncomeExpenseBarChart(APIView):
 class CategoriesDonutChart(APIView):
     def get(self, request):
         queryset = models.Category.objects.all()
-        data = {
-            "labels": [],
-            "series": []
-        }
+        data = []
 
         for category in queryset:
             sumAmount = models.Transaction.objects.filter(category=category.id).aggregate(
                 Sum("transactionAmount")).get("transactionAmount__sum") or 0
 
-            data['series'].append(sumAmount)
-            data['labels'].append(category.category)
+
+            data.append({
+                "id": category.category,
+                "label": category.category,
+                "value": sumAmount,
+                # "valuePosition": "inside"
+            })
         return Response(data, status=status.HTTP_200_OK)
 
 # voronoi tooltip competing income and expense through time ( x = time, y = cost)

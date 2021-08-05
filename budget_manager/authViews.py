@@ -1,55 +1,91 @@
-from rest_framework import generics, status
-from django.contrib.auth.models import User
-from . import serializers
+from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+import jwt, datetime
 
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView
-from knox.models import AuthToken
-from django.contrib.auth import (
-	authenticate, get_user_model, login as auth_login, logout as auth_logout
-)
+from . import serializers, models
+
+#Register API
+class RegisterView(APIView):
+    def post(self, request):
+        serializer = serializers.UserSerializer(data=request.data.get('user', {}))
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class RegistrationAPIView(generics.GenericAPIView):
-    serializer_class = serializers.RegistationSerializer
+class LoginView(APIView):
+    def post(self, request):
+        data = request.data.get('user', {})
+        email = data.get('email', '')
+        password = data.get('password', '')
+
+        user = models.User.objects.filter(email=email).first()
+        
+        if user is None:
+            return Response({"message": "User not found!"}, status=status.HTTP_404_NOT_FOUND)
+        
+        if not user.check_password(password):
+            return Response({"message": "Password is incorrect!"}, status=status.HTTP_404_NOT_FOUND)
+        
+        payload = {
+            'id': user.id,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+            'iat': datetime.datetime.utcnow()
+        }
+
+        token = jwt.encode(payload, 'secret', algorithm='HS256').decode('utf-8')
+
+        response = Response()
+
+        response.set_cookie(key='jwt', value=token, httponly=True)
+
+        response.data = {
+            'user': serializers.UserSerializer(user).data,
+            'token': token
+        }
+
+        response.status_code = status.HTTP_200_OK
+
+        return response
+
+
+class UserView(APIView):
+    def get(self, request):
+        token = request.COOKIES.get('jwt')
+
+        if not token:
+            return Response({"message": "Unauthenticated!"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        
+        try:
+            payload = jwt.decode(token, 'secret', algorithm=['HS256'])
+        except jwt.ExpiredSignatureError:
+            return Response({"message": "Unauthenticated!"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        user = models.User.objects.filter(id=payload.get('id', 0)).first()
+
+        return Response({
+            "user": serializers.UserSerializer(user).data,
+            "token": token
+        }, status=status.HTTP_200_OK)
+
+
+class LogoutView(APIView):
 
     def post(self, request):
-        serializer = self.get_serializer(data = request.data['user'])
-        if serializer.is_valid():
-            serializer.save()
-            return Response({
-                "Message": "User created successfully",
-                "user": serializer.data,
+        response = Response()
+        response.delete_cookie('jwt')
+        response.data = {
+            "message": "User successfully logout"
+        }
 
-            }, status=status.HTTP_201_CREATED)
-    
-        return Response({"Errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return response;
 
-
-class LoginAPIView(TokenObtainPairView):
-    serializer_class = serializers.LoginSerializer
-
-    def post(self, request):
-        username=request.data['user']['username']
-        password=request.data['user']['password']
-        
-        serializer = self.get_serializer(data = request.data['user'])
-        if serializer.is_valid():
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                return Response({
-                    "user": {
-                        "id": user.id,
-                        "username": user.username,
-                        "email": user.email
-                    },
-                    "token": AuthToken.objects.create(user)[1],
-                }, status=status.HTTP_200_OK)
-
-            return Response({"Error": "There is no such user with this username and password"}, status=status.HTTP_404_NOT_FOUND)
-        return Response({"Error": "Bad request"}, status=status.HTTP_400_BAD_REQUEST)
-        
-       
+# {
+# "user": {
+#     "username": "kanan.mika",
+#     "password": "KM_jr2000"
+# }
+# }

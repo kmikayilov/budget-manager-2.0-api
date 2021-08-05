@@ -1,7 +1,14 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
 # Create your models here.
 
+
+class User(AbstractUser):
+    email = models.CharField(max_length=255, null=True)
+    username = models.CharField(max_length=255, null=True)
+    password = models.CharField(max_length=255, null=True)
+    
 class Accounting(models.Model):
     accounting_type = models.CharField(max_length=50, null=True)
     coefficient = models.IntegerField(null=True)

@@ -7,26 +7,26 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 urlpatterns = [
 
     # listsAPI
-    path('transactions', listsViews.transactionsView.as_view(),
+     path('transactions', listsViews.transactionsView.as_view(),
          name="transactions-list"),
-    path('accountings', listsViews.accountingsView.as_view(), name="accoutings-list"),
-    path('categories', listsViews.categoriesView.as_view(), name="categories-list"),
-    path('payments', listsViews.paymentsView.as_view(), name="payments-list"),
+     path('accountings', listsViews.accountingsView.as_view(), name="accoutings-list"),
+     path('categories', listsViews.categoriesView.as_view(), name="categories-list"),
+     path('payments', listsViews.paymentsView.as_view(), name="payments-list"),
 
-    # transactionAPI
+    # transactionAPIru
 
     # transaction/post
-    path('transaction/create', transactionViews.createTransactionView.as_view(),
+     path('transaction/create', transactionViews.createTransactionView.as_view(),
          name="transaction-create"),
 
     # transaction/filter
-    path('transaction/filter', transactionViews.FilterTransactions.as_view(),
+     path('transaction/filter', transactionViews.FilterTransactions.as_view(),
          name="transactions_filter"),
 
     # transaction/fetch
     # transaction/put
     # transaction/delete
-    path('transaction/<transaction_id>',
+     path('transaction/<transaction_id>',
          transactionViews.TransactionView.as_view(), name="transaction_detail"),
 
 
@@ -34,13 +34,18 @@ urlpatterns = [
      # authAPI
 
      # auth/register
-     path('auth/register', authViews.RegistrationAPIView.as_view(), name="register-user"),
+     path('auth/register', authViews.RegisterView.as_view(), name="register-user"),
      
      # auth/login
-     path('auth/login', authViews.LoginAPIView.as_view(), name="login-user"),
+     path('auth/login', authViews.LoginView.as_view(), name="login-user"),
 
      # auth/auth
-     path('auth/user', TokenRefreshView.as_view(), name="auth-user"),
+     path('auth/user', authViews.UserView.as_view(), name="auth-user"),
+
+     # auth/logout
+     path('auth/logout', authViews.LogoutView.as_view(), name="logout-user"),
+
+
 
      # analysis
 

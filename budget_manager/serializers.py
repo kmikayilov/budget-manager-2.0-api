@@ -1,60 +1,24 @@
 from rest_framework import serializers
 
-from django.contrib.auth.models import User
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
 from . import models
 
 
-class RegistationSerializer(serializers.ModelSerializer):
-    
-    email = serializers.EmailField(max_length=50, min_length=6)
-    username = serializers.CharField(max_length=50, min_length=6)
-    password = serializers.CharField(max_length=150, write_only=True)
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ('email', 'username', 'password')
-
-    
-    def validate(self, args):
-        email = args.get('email', None)
-        username = args.get('username', None)
-        if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError({"email": ("email already exists")})
-        if User.objects.filter(username=username).exists():
-            raise serializers.ValidationError({"username": ("username already exists")})
-        
-        return super().validate(args)
+        model = models.User
+        fields = ['id', 'username', 'email', 'password']
+        extra_kwargs = {
+            "password": { "write_only": True}
+        }
 
     def create(self, validated_data):
-        return User.objects.create_user(**validated_data)  
-
-class LoginSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(max_length=50, min_length=6)
-    password = serializers.CharField(max_length=150, write_only=True)
-    class Meta:
-        model = User
-        fields = ('username', 'password')
-
-#     def validate(self, attrs):
-#         data = super().validate(attrs)
-#         refresh = self.get_token(self.user)
-#         data['refresh'] = str(refresh)
-#         data['access'] = str(refresh.access_token)
-#         return data
-
-
-from rest_framework_simplejwt.serializers import TokenRefreshSerializer
-from rest_framework_simplejwt.state import token_backend
-
-class CustomTokenRefreshSerializer(TokenRefreshSerializer):
-    def validate(self, attrs):
-        data = super(CustomTokenRefreshSerializer, self).validate(attrs)
-        decoded_payload = token_backend.decode(data['access'], verify=True)
-        user_uid=decoded_payload['user_id']
-        # add filter query
-        # data.update({'custom_field': 'custom_data')})
-        return data
+        password  = validated_data.pop('password', None)
+        instance =  self.Meta.model(**validated_data)
+        if password is not None:
+            instance.set_password(password)
+        
+        instance.save()
+        return instance
 
 class AccountingSerializer(serializers.ModelSerializer):
     class Meta:
