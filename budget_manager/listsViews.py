@@ -1,6 +1,6 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
-
+from rest_framework.permissions import IsAuthenticated
 from . import serializers, models
 
 # Create your Lists views here.
@@ -11,6 +11,7 @@ class categoriesView(generics.ListCreateAPIView):
     serializer_class = serializers.CategorySerializer
 
     def get(self, request, format=None):
+        print(request.headers)
         objects = self.get_queryset()
         objectsList = serializers.CategorySerializer(objects, many=True).data
         data = {

@@ -1,3 +1,4 @@
+import budget_manager_api
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,6 +18,15 @@ class RegisterView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+#  {
+#  "user": {
+#      "email": "",
+#      "username": '',
+#      "password": ""
+#  }
+# }
 
 
 class LoginView(APIView):
@@ -39,8 +49,8 @@ class LoginView(APIView):
             'iat': datetime.datetime.utcnow()
         }
 
-        token = jwt.encode(payload, 'secret',
-                           algorithm='HS256').decode('utf-8')
+        token = jwt.encode(payload, "secret",
+                           algorithm='HS256')
 
         response = Response()
 
@@ -55,18 +65,29 @@ class LoginView(APIView):
 
         return response
 
+#  {
+#  "user": {
+#      "email": "kenan.mikayilov.00@gmail.com",
+#      "password": "KM_jr2000"
+#  }
+# }
 
 class UserView(APIView):
+    
     def get(self, request):
+        print(request.headers)
+        print(request.COOKIES)
         token = request.COOKIES.get('jwt')
-
+        print(token)
         if not token:
-            return Response({"message": "Unauthenticated!"}, status=status.HTTP_401_UNAUTHORIZED)
+            print('token')
+            return Response({"message": "Unauthorized!"}, status=status.HTTP_401_UNAUTHORIZED)
 
         try:
-            payload = jwt.decode(token, 'secret', algorithm=['HS256'])
+            payload = jwt.decode(token, "secret", algorithm=['HS256'])
         except jwt.ExpiredSignatureError:
-            return Response({"message": "Unauthenticated!"}, status=status.HTTP_401_UNAUTHORIZED)
+            print('token expired')
+            return Response({"message": "Unauthorized!"}, status=status.HTTP_401_UNAUTHORIZED)
 
         user = models.User.objects.filter(id=payload.get('id', 0)).first()
 
@@ -84,12 +105,12 @@ class LogoutView(APIView):
         response.data = {
             "message": "User successfully logout"
         }
-
         return response
 
-# {
-# "user": {
-#     "username": "kanan.mika",
-#     "password": "KM_jr2000"
-# }
-# }
+
+
+
+
+
+
+
