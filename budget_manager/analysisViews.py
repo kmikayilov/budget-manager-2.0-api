@@ -11,16 +11,7 @@ from . import models, serializers
 
 class IncomeExpenseBarChart(APIView):
     def get(self, request):
-        data = [
-            {
-                "seriesname": 'Income',
-                "data": [],
-            },
-            {
-                "seriesname": "Expense",
-                "data": [],
-            }
-        ]
+        data = []
 
         year = datetime.datetime.today().year
 
@@ -32,9 +23,36 @@ class IncomeExpenseBarChart(APIView):
             sumExpense = models.Transaction.objects.filter(Q(transactionDate__icontains=date) & Q(
                 category__accounting=2)).aggregate(Sum('transactionAmount')).get('transactionAmount__sum') or 0
 
-            data[0]['data'].append(sumIncome)
-            data[1]['data'].append({
-                    "value":sumExpense
+            data.append({
+                    "name": datetime.datetime.strptime(str(i), "%m").strftime("%b"),
+                    "Income": sumIncome,
+                    "Expense": sumExpense
+                }
+            )
+
+
+        return Response(data, status=status.HTTP_200_OK)
+
+
+# monthly analysis of total net (Victory chart)
+class TotalNetBarChart(APIView):
+    def get(self, request):
+        data = []
+
+        year = datetime.datetime.today().year
+
+        for i in range(1, 13):
+            date = "{}-{}-".format(year,
+                                   i) if i > 9 else "{}-0{}-".format(year, i)
+            sumIncome = models.Transaction.objects.filter(Q(transactionDate__icontains=date) & Q(
+                category__accounting=1)).aggregate(Sum('transactionAmount')).get('transactionAmount__sum') or 0
+            sumExpense = models.Transaction.objects.filter(Q(transactionDate__icontains=date) & Q(
+                category__accounting=2)).aggregate(Sum('transactionAmount')).get('transactionAmount__sum') or 0
+
+            # data[0]['data'].append(sumIncome)
+            data.append({
+                    "name": datetime.datetime.strptime(str(i), "%m").strftime("%b"),
+                    "Total": sumIncome - sumExpense,
                 }
             )
 
@@ -56,8 +74,7 @@ class CategoriesDonutChart(APIView):
 
 
             data.append({
-                "id": category.category,
-                "label": category.category,
+                "name": category.category,
                 "value": sumAmount,
                 # "valuePosition": "inside"
             })
@@ -65,4 +82,4 @@ class CategoriesDonutChart(APIView):
 
 # voronoi tooltip competing income and expense through time ( x = time, y = cost)
 
-#
+

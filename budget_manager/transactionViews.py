@@ -1,3 +1,4 @@
+from datetime import datetime
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,31 +15,31 @@ class createTransactionView(generics.CreateAPIView):
     serializer_class = serializers.MakeTransactionSerializer
 
     def post(self, request, format=None):
+        data = {}
+        new_transaction = request.data.get('transaction', {})
+
         categoryQuerySet = models.Category.objects.filter(
-            id=request.data['transaction']['categoryId'])
+            id=new_transaction.get('categoryId', 0))
         if categoryQuerySet.exists():
-            category = categoryQuerySet[0]
+            data['category'] = categoryQuerySet.first()
         else:
             Response({"Category not found": "Invalid category id"},
                      status=status.HTTP_404_NOT_FOUND)
+        
 
         paymentQuerySet = models.PaymentMethod.objects.filter(
-            id=request.data['transaction']['paymentId'])
+            id=new_transaction.get('paymentId', 0))
         if paymentQuerySet.exists():
-            payment = paymentQuerySet[0]
+            data['payment'] = paymentQuerySet.first()
         else:
             Response({"Payment method not found": "Invalid payment method id"},
-                     status=status.HTTP_404_NOT_FOUND)
+                    status=status.HTTP_404_NOT_FOUND)
+        
 
-        data = {
-            "amount": request.data['transaction']['transactionAmount'],
-            "date": request.data['transaction']['transactionDate'],
-            "category": category,
-            "payment": payment
-        }
-
-        transaction = models.Transaction(
-            transactionAmount=data["amount"], transactionDate=data["date"], category=data["category"], payment=data["payment"])
+        data["transactionAmount"] = new_transaction.get('transactionAmount', 0)
+        data["transactionDate"] =  new_transaction.get('transactionDate', datetime.today())
+    
+        transaction = models.Transaction(**data)
         transaction.save()
 
         return Response(serializers.TransactionSerializer(transaction).data, status=status.HTTP_201_CREATED)
@@ -47,8 +48,7 @@ class createTransactionView(generics.CreateAPIView):
 class TransactionView(APIView):
     def get_transaction(self, transaction_id):
         try:
-            transaction = models.Transaction.objects.filter(id=transaction_id)[
-                0]
+            transaction = models.Transaction.objects.filter(id=transaction_id).first()
             return transaction
         except models.Transaction.DoesNotExist:
             return Response({"Transaction not found": "Invalid transaction id"}, status=status.HTTP_404_NOT_FOUND)
@@ -66,43 +66,43 @@ class TransactionView(APIView):
             return Response({"Bad request": "Id param not found in request"}, status=status.HTTP_400_BAD_REQUEST)
 
         transaction = self.get_transaction(transaction_id)
+        
+        new_transaction = request.data.get('transaction', {})
 
-        if transaction.category.id != request.data['transaction']['categoryId']:
+        if transaction.category.id != new_transaction.get('categoryId', 0):
             categoryQuerySet = models.Category.objects.filter(
-                id=request.data['transaction']['categoryId'])
+                id=new_transaction.get('categoryId', 0))
             if categoryQuerySet.exists():
-                category = categoryQuerySet[0]
+                category = categoryQuerySet.first()
             else:
                 Response({"Category not found": "Invalid category id"},
                          status=status.HTTP_404_NOT_FOUND)
 
             transaction.category = category
+    
 
-        if transaction.payment.id != request.data['transaction']['paymentId']:
+        if transaction.payment.id != new_transaction.get('paymentId', 0):
             paymentQuerySet = models.PaymentMethod.objects.filter(
-                id=request.data['transaction']['paymentId'])
+                id=new_transaction.get('paymentId', 0))
             if paymentQuerySet.exists():
-                payment = paymentQuerySet[0]
+                payment = paymentQuerySet.first()
             else:
                 Response({"Payment method not found": "Invalid payment method id"},
-                         status=status.HTTP_404_NOT_FOUND)
+                        status=status.HTTP_404_NOT_FOUND)
 
             transaction.payment = payment
 
-        if transaction.transactionAmount != request.data['transaction']['transactionAmount']:
-            transaction.transactionAmount = request.data['transaction']['transactionAmount']
+        if transaction.transactionAmount != new_transaction.get('transactionAmount', 0):
+            transaction.transactionAmount = new_transaction.get('transactionAmount', 0)
 
-        if transaction.transactionDate != request.data['transaction']['transactionDate']:
-            transaction.transactionDate = request.data['transaction']['transactionDate']
+        if transaction.transactionDate != new_transaction.get('transactionDate', 0):
+            transaction.transactionDate = new_transaction.get('transactionDate', 0)
 
         transaction.save()
 
         return Response(serializers.TransactionSerializer(transaction).data, status=status.HTTP_200_OK)
 
     def delete(self, request, transaction_id):
-        print(transaction_id)
-        print(request.data['transaction'])
-
         if transaction_id == None:
             return Response({"Bad request": "Id param not found in request"}, status=status.HTTP_400_BAD_REQUEST)
 
