@@ -182,3 +182,10 @@ DATE_INPUT_FORMATS = [
 ]
 
 AUTH_USER_MODEL = 'budget_manager.User'
+
+
+#---------------------------------------------------
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = None
+SESSION_COOKIE_SAMESITE = None

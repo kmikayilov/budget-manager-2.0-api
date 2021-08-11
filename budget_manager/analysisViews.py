@@ -52,7 +52,7 @@ class TotalNetBarChart(APIView):
             # data[0]['data'].append(sumIncome)
             data.append({
                     "name": datetime.datetime.strptime(str(i), "%m").strftime("%b"),
-                    "Total": sumIncome - sumExpense,
+                    "Net cash flow": sumIncome - sumExpense,
                 }
             )
 
@@ -72,12 +72,12 @@ class CategoriesDonutChart(APIView):
             sumAmount = models.Transaction.objects.filter(category=category.id).aggregate(
                 Sum("transactionAmount")).get("transactionAmount__sum") or 0
 
-
-            data.append({
-                "name": category.category,
-                "value": sumAmount,
-                # "valuePosition": "inside"
-            })
+            if sumAmount  != 0:
+                data.append({
+                    "name": category.category,
+                    "value": sumAmount,
+                    # "valuePosition": "inside"
+                })
         return Response(data, status=status.HTTP_200_OK)
 
 # voronoi tooltip competing income and expense through time ( x = time, y = cost)
