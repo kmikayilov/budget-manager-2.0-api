@@ -1,16 +1,25 @@
-from django.urls import path
+from django.urls import path, include
 
 from . import transactionViews, listsViews, authViews, analysisViews
 
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'categories/(?P<acc>\d+)', listsViews.categoriesView, basename='user')
+# urlpatterns = router.urls
+
 urlpatterns = [
+
+     path('api/', include(router.urls)),
 
     # listsAPI
     path('transactions', listsViews.transactionsView.as_view(),
          name="transactions-list"),
     path('accountings', listsViews.accountingsView.as_view(), name="accoutings-list"),
-    path('categories', listsViews.categoriesView.as_view(), name="categories-list"),
+#     path('categories', listsViews.categoriesView.as_view(), name="categories-list"),
     path('payments', listsViews.paymentsView.as_view(), name="payments-list"),
 
     # transactionAPIru
