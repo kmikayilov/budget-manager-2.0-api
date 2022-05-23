@@ -1,0 +1,63 @@
+{% load static %}
+<html lang="en"><!-- begin::Head --><head>
+		
+	<meta charset="utf-8">
+	<title>Budget Manager | Login Page</title>
+	<meta name="description" content="Login page example">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<!--begin::Fonts -->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700|Asap+Condensed:500">
+
+	<!--begin::Page Custom Styles(used by this page) -->
+	<link href="{% static 'assets/css/login.css' %}" rel="stylesheet" type="text/css">
+	<link href="{% static 'assets/css/style.bundle.css' %}" rel="stylesheet" type="text/css">
+</head>
+
+<!-- end::Head -->
+
+<!-- begin::Body -->
+<body class="kt-page-content-white kt-quick-panel--right kt-demo-panel--right kt-offcanvas-panel--right kt-header--fixed kt-header-mobile--fixed kt-subheader--enabled kt-subheader--transparent kt-aside--enabled kt-aside--fixed">
+
+	<!-- begin:: Page -->
+	<div class="kt-grid kt-grid--ver kt-grid--root kt-page">
+		<div class="kt-grid kt-grid--hor kt-grid--root  kt-login kt-login--v4 kt-login--signin" id="kt_login">
+			<div class="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--hor" style="background-color: #171c24;">
+				<div class="kt-grid__item kt-grid__item--fluid kt-login__wrapper">
+					<div class="kt-login__container">
+						<div class="kt-login__logo">
+                            <div class="row justify-content-between">
+                                <img src="{% static 'assets/images/ufaz-logo.png' %}" width="200">
+                                <img src="{% static 'assets/images/unistra-logo-2.jpg' %}" width="200">
+                            </div>
+						</div>
+						{% for message in messages%}
+						    <div class="alert alert-danger">{{message}}</div>
+						{% endfor %}
+						
+                        <div class="kt-login__signin">
+                            <div class="kt-login__head">
+                                <h3 class="kt-login__title" style="color: #5867dd;" >Budget Manager API</h3>
+                            </div>
+                            <form class="kt-form" action="" method="POST">
+                                {% csrf_token %}
+                                <div class="input-group">
+                                    <input class="form-control" type="text" placeholder="username" name="username">
+                                </div>
+                                <div class="input-group">
+                                    <input class="form-control" type="password" placeholder="Password" name="password" autocomplete="off">
+                                </div>
+                                
+                                <div class="kt-login__actions">
+                                    <button id="kt_login_signin_submit" class="btn btn-brand btn-pill kt-login__btn-primary">Sign In</button>
+                                </div>
+                            </form>
+                        </div>							
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</body>
+</html>
