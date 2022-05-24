@@ -27,14 +27,15 @@ urlpatterns = [
    path('Transaction/<pk>/', transaction.transaction, name="transaction"),
    
    # Accounting APIs
-   path('Accounting/list/', accounting.accounting_list, name="accounting-list"),
-   path('Accounting/create/', accounting.accounting_post, name="accounting-create"),
-   path('Accounting/<pk>/', accounting.accounting, name="accounting"),
+   path('Accounting/', accounting.accounting_list, name="accounting-list"),
+   path('Accounting/<pk>/', accounting.accounting_detail, name="accounting-detail"),
    
    # Category APIs
-   path('Category/list/', category.category_list, name="category-list"),
-   path('Category/create/', category.category_post, name="category-create"),
-   path('Category/<pk>/', category.category, name="category"),
+   path('Category/', category.category_list, name="category-list"),
+   path('Category/<pk>/', category.category_detail, name="category-detail"),
+   path('Category/filter/<accounting_id>/', category.category_filter, name="category-filter"),
+   # path('Category/create/', category.category_post, name="category-create"),
+   # path('Category/<pk>/', category.category, name="category"),
    
    # Payment APIs
    path('Payment/list/', payment.payment_list, name="payment-list"),
@@ -52,3 +53,7 @@ urlpatterns = [
    # swagger
    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
+
+# from rest_framework.urlpatterns import format_suffix_patterns
+
+# urlpatterns = format_suffix_patterns(urlpatterns)
